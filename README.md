@@ -11,7 +11,7 @@ a decision-tree based classification process that occurs in the Processing appli
 This is a Processing sketch that reads in the R output, classifies the trip data by its 
 transport mode, produces summary statistics and presents it all in a map/stat visualisation.
 
-# pushMe.pde ###
+### pushMe.pde ###
 This sketch performs the same initial operations as the main sketch, but the visualisation
  is geared towards a quick, glanceable display of information.
  
