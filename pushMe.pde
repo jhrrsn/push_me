@@ -1,5 +1,7 @@
-// v0.9
-// Calories.
+// v0.91
+// Distance/Calorie bars.
+// Next push: change bars to line graph (over time), click on cals or km to display respective chart.
+// Make an array of distance and calorie estimates (from data).
 
 Float s, e, lon, lat, time, cals, lastS, smax, latmax, latmin, lonmax, lonmin;
 Float dDist, wDist, rDist, cDist, dTime, wTime, rTime, cTime;
@@ -11,12 +13,12 @@ HashMap<Float, HashMap<Float, Float []>> master = new HashMap<Float, HashMap<Flo
 PVector posn, l, lastR, lastP;
 int wmeas;
 //--------USER INPUT-------//
-int trips = 7;             // <-- INPUT NUMBER OF SEPARATE TRIPS [trip1.csv, trip2.csv, trip3.csv...]
-int kg = 70;
+int trips = 8;             // 	<-- INPUT NUMBER OF SEPARATE TRIPS [trip1.csv, trip2.csv, trip3.csv...]
+int kg = 70;			    //	<-- INPUT USER WEIGHT [for calorie calculations]
 //-------------------------//
 
 //----------------------------------------------------------------------------------------------------//
-//----------------------------------------------------------------------------------------------------//
+//--------------------------------------------setup---------------------------------------------------//
 //----------------------------------------------------------------------------------------------------//
 void setup()
 {
@@ -29,12 +31,12 @@ void setup()
   
   textAlign(CENTER);
   fontSmall = loadFont("Avenir-Book-13.vlw");
-  fontBig = loadFont("AvenirNext-Bold-22.vlw");
+  fontBig = loadFont("AvenirNext-DemiBold-18.vlw");
   textFont(fontSmall, 12);
   textSize(12);
   fill(180);
-  text("Activity by Distance", width/2, height-162);
-  text("Activity by Time", width/2, height-82);
+  text("Distance by activity", width/2, height-162);
+  text("Calories by activity", width/2, height-82);
   
   dDist = 0.0;
   wDist = 0.0;
@@ -68,9 +70,11 @@ void setup()
   textSize(12);
   
   fill(0);
-  text("22/07/12", width/2-30, 20);
+  text("27/07/12", width/2-30, 20);
   text("-", width/2, 20);
-  text("28/07/12", width/2+30, 20);
+  text("29/07/12", width/2+30, 20);
+  
+  
   
   fill(180);
   text("Driving", 20+keywidth/2, 40);
@@ -96,7 +100,7 @@ void setup()
 }
 
 //----------------------------------------------------------------------------------------------------//
-//----------------------------------------------------------------------------------------------------//
+//---------------------------------------------draw---------------------------------------------------//
 //----------------------------------------------------------------------------------------------------//
 void draw()
 {
@@ -114,50 +118,57 @@ void draw()
     time = 0.0;
     lastP = null;
   }
-
+  
+  textFont(fontBig, 18);
+  textSize(18);
+  fill(0);
+  float tKM = Math.round(dDist + wDist + rDist + cDist)/10;
+  if (tKM/100 < 10) text(String.format("%.2f", tKM/100), width/2-60, height-182);
+  else text(String.format("%.2f", tKM/100), width/2-67, height-182);
+  fill(180);
+  text("km", width/2-23, height-182);
+  
   float mDist = dDist;
   if (wDist > mDist) mDist = wDist;
   else if (rDist > mDist) mDist = rDist;
   else if (cDist > mDist) mDist = cDist;
   
-  float mTime = dTime;
-  if (wTime > mTime) mTime = wTime;
-  else if (rTime > mTime) mTime = rTime;
-  else if (cTime > mTime) mTime = cTime;
+  float mCals = wCals;
+  if (rCals > mCals) mCals = rCals;
+  else if (cCals > mCals) mCals = cCals;
    
   noSmooth();
   fill(245, 180, 60);
   stroke(245, 180, 60);
   rect(20, height-155, width-map(dDist, mDist, 0, 40, width), 10);
-  rect(20, height-75, width-map(dTime, mTime, 0, 40, width), 10);
   
   fill(43, 107, 145);
   stroke(43, 107, 145);
   rect(20, height-140, width-map(wDist, mDist, 0, 40, width), 10);
-  rect(20, height-60, width-map(wTime, mTime, 0, 40, width), 10);
+  rect(20, height-75, width-map(wCals, mCals, 0, 40, width), 10);
   
   fill(85, 177, 85);
   stroke(85, 177, 85);
   rect(20, height-125, width-map(rDist, mDist, 0, 160, width), 10);
-  rect(20, height-45, width-map(rTime, mTime, 0, 40, width), 10);
+  rect(20, height-60, width-map(rCals, mCals, 0, 40, width), 10);
   
   fill(233, 71, 123);
   stroke(233, 71, 123);
   rect(20, height-110, width-map(cDist, mDist, 0, 40, width), 10);
-  rect(20, height-30, width-map(cTime, mTime, 0, 40, width), 10);
+  rect(20, height-45, width-map(cCals, mCals, 0, 40, width), 10);
   
-  textFont(fontBig, 22);
-  textSize(22);
+  textFont(fontBig, 18);
+  textSize(18);
   fill(0);
-  text(Math.round(cals), width/2-20, height-182);
+  text(Math.round(cals), width/2+33, height-182);
   fill(180);
-  text("cals", width/2+20, height-182);
+  text("cals", width/2+67, height-182);
 }
 
 //----------------------------------------------------------------------------------------------------//
+//------------------------------------------loadEntries-----------------------------------------------//
 //----------------------------------------------------------------------------------------------------//
-//----------------------------------------------------------------------------------------------------//
-void loadEntries(String input, Float j)
+	void loadEntries(String input, Float j)
 {
   HashMap<Float, Float []> data = new HashMap<Float, Float []>();
   float speed;
@@ -234,7 +245,7 @@ void loadEntries(String input, Float j)
 
 
 //----------------------------------------------------------------------------------------------------//
-//----------------------------------------------------------------------------------------------------//
+//---------------------------------------------drawTrip-----------------------------------------------//
 //----------------------------------------------------------------------------------------------------//
 void drawTrip (HashMap<Float, Float []> drawing)
 {
@@ -263,7 +274,7 @@ void drawTrip (HashMap<Float, Float []> drawing)
         wTime = wTime + (values[4]/spd);
         float calHr = map(spd, 0.7, 2, walkSlow, walkFast);
         float calThis = (values[4]/spd) * (calHr/3600);
-        cals = cals + calThis;
+        wCals = wCals + calThis;
         stroke(43, 107, 145);
       }
       
@@ -273,7 +284,7 @@ void drawTrip (HashMap<Float, Float []> drawing)
         rTime = rTime + (values[4]/spd);
         float calHr = map(spd, 2, 4, runSlow, runFast);
         float calThis = (values[4]/spd) * (calHr/3600);
-        cals = cals + calThis;
+        rCals = rCals + calThis;
         stroke(85, 177, 85);
       }
       
@@ -283,10 +294,11 @@ void drawTrip (HashMap<Float, Float []> drawing)
         cTime = cTime + (values[4]/spd);
         float calHr = map(spd, 4, 8, cycleSlow, cycleFast);
         float calThis = (values[4]/spd) * (calHr/3600);
-        cals = cals + calThis;
+        cCals = cCals + calThis;
         stroke(233, 71, 123);
       }
       else noStroke();
+      cals = wCals+rCals+cCals;  
     }
     if (lastP == null) point(x, y);
     else line(lastP.x, lastP.y, x, y);
