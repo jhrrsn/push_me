@@ -26,4 +26,4 @@ This folder contains some sample data for use in the Processing applications.
 ## License ##
 - The Avenir typeface is Copyright © 2012 Linotype GmbH.
 - The report is Copyright © 2012 Jack Harrison.
-- Everything else is released under an MIT License.
+- Everything else is released under an [MIT License](http://opensource.org/licenses/MIT).
